@@ -24,12 +24,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.example.domain.flashcards.CardItem
+import com.example.domain.flashcards.model.CardItem
 
 @Composable
 fun CardScreen(navController: NavController, viewModel: CardViewModel = hiltViewModel()) {
@@ -62,7 +63,10 @@ fun Content(cardItem: CardItem, onAlternativeChosen: (CardItem.Alternative) -> U
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Gray)
         )
     }) { innerPadding ->
-        CardComposable(modifier = Modifier.padding(innerPadding), cardItem, onAlternativeChosen)
+        Column {
+            CardComposable(modifier = Modifier.padding(innerPadding), cardItem, onAlternativeChosen)
+            AnswerComposable()
+        }
     }
 }
 
@@ -84,7 +88,7 @@ fun CardComposable(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(text = card.title)
+            Text(text = card.id)
             Box(Modifier.height(8.dp))
             Text(modifier = Modifier.fillMaxWidth(), text = card.description)
             AlternativeListItem(card.alternatives, onAlternativeChosen)
@@ -93,23 +97,34 @@ fun CardComposable(
 }
 
 @Composable
-fun AlternativeListItem(alternatives: List<CardItem.Alternative>,  onAlternativeChosen: (CardItem.Alternative) -> Unit) {
+fun AlternativeListItem(
+    alternatives: List<CardItem.Alternative>,
+    onAlternativeChosen: (CardItem.Alternative) -> Unit
+) {
     LazyColumn(
         modifier = Modifier
             .padding(16.dp)
             .fillMaxWidth()
     ) {
         items(items = alternatives) {
-            Button(modifier = Modifier.fillMaxWidth(), onClick = { onAlternativeChosen(it)}) {
-                Text(text = "${it.id} - ${it.text}")
+            Button(modifier = Modifier.fillMaxWidth(), onClick = { onAlternativeChosen(it) }) {
+                Text(text = it.toString())
             }
         }
     }
 }
 
 @Composable
-fun AnswerComposable() {
-
+fun AnswerComposable(isVisible: Boolean = false, alternative: CardItem.Alternative? = null) {
+    if (isVisible || alternative != null) {
+        Text(
+            modifier = Modifier
+                .padding(all = 16.dp)
+                .fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            text = alternative.toString()
+        )
+    }
 }
 
 @Preview

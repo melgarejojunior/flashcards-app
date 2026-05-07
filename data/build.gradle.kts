@@ -38,6 +38,12 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.hilt.android)
+    implementation(libs.ktor.core)
+    implementation(libs.ktor.cio)
+    implementation(libs.ktor.content)
+    implementation(libs.ktor.logging)
+    implementation(libs.ktor.serialization.json)
+//    implementation(libs.kotlin.serialization)
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)

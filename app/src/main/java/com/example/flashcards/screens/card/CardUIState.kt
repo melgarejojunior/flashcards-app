@@ -1,6 +1,6 @@
 package com.example.flashcards.screens.card
 
-import com.example.domain.flashcards.CardItem
+import com.example.domain.flashcards.model.CardItem
 
 sealed class CardUIState() {
     data object Loading : CardUIState()
