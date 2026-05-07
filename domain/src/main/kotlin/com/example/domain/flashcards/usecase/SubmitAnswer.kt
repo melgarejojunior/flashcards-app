@@ -6,7 +6,7 @@ import com.example.domain.flashcards.repository.CardsRepository
 import javax.inject.Inject
 
 class SubmitAnswer @Inject constructor(private val repository: CardsRepository) {
-    suspend fun invoke(cardId: String, alternative: CardItem.Alternative): Result<AnswerResult> {
+    suspend operator fun invoke(cardId: String, alternative: CardItem.Alternative): Result<AnswerResult> {
         return repository.answer(alternative = alternative, cardId = cardId)
     }
 }

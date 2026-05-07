@@ -19,7 +19,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.example.domain.flashcards.model.AnswerResult
 import com.example.domain.flashcards.model.CardItem
 
 @Composable
@@ -40,7 +45,11 @@ fun CardScreen(navController: NavController, viewModel: CardViewModel = hiltView
     when (val uiState = state) {
         CardUIState.Loading -> Loading()
         is CardUIState.Error -> Error(uiState.errorMessage)
-        is CardUIState.Success -> Content(uiState.cardItem, viewModel::onAlternativeChosen)
+        is CardUIState.Success -> Content(
+            viewModel,
+            uiState.cardItem,
+            viewModel::onAlternativeChosen
+        )
     }
 }
 
@@ -56,16 +65,41 @@ fun Error(errorMessage: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Content(cardItem: CardItem, onAlternativeChosen: (CardItem.Alternative) -> Unit) {
+fun Content(
+    viewModel: CardViewModel,
+    cardItem: CardItem,
+    onAlternativeChosen: (String, CardItem.Alternative) -> Unit
+) {
+    var answerResult: AnswerResult? by remember { mutableStateOf(null) }
+
+    LaunchedEffect(Unit) {
+        viewModel.event.collect {
+            when (it) {
+                is CardUIEvent.AnswerReceived -> {
+                    answerResult = it.answerResult
+                }
+            }
+        }
+    }
+
     Scaffold(topBar = {
         TopAppBar(
             title = { Text("Flashcard App") },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Gray)
         )
-    }) { innerPadding ->
+    })
+    { innerPadding ->
         Column {
-            CardComposable(modifier = Modifier.padding(innerPadding), cardItem, onAlternativeChosen)
-            AnswerComposable()
+            CardComposable(
+                modifier = Modifier.padding(innerPadding),
+                card = cardItem,
+                onAlternativeChosen = { alternative ->
+                    onAlternativeChosen(
+                        cardItem.id,
+                        alternative
+                    )
+                })
+            AnswerComposable(answerResult = answerResult, viewModel::onNextClicked)
         }
     }
 }
@@ -104,7 +138,8 @@ fun AlternativeListItem(
     LazyColumn(
         modifier = Modifier
             .padding(16.dp)
-            .fillMaxWidth()
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(items = alternatives) {
             Button(modifier = Modifier.fillMaxWidth(), onClick = { onAlternativeChosen(it) }) {
@@ -115,15 +150,20 @@ fun AlternativeListItem(
 }
 
 @Composable
-fun AnswerComposable(isVisible: Boolean = false, alternative: CardItem.Alternative? = null) {
-    if (isVisible || alternative != null) {
-        Text(
-            modifier = Modifier
-                .padding(all = 16.dp)
-                .fillMaxWidth(),
-            textAlign = TextAlign.Center,
-            text = alternative.toString()
-        )
+fun AnswerComposable(answerResult: AnswerResult? = null, onNextClicked: () -> Unit) {
+    if (answerResult != null) {
+        Column {
+            Text(
+                modifier = Modifier
+                    .padding(all = 16.dp)
+                    .fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                text = answerResult.message
+            )
+            Button(onClick = onNextClicked) {
+                Text(text = "Next")
+            }
+        }
     }
 }
 
